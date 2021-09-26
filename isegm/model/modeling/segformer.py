@@ -10,9 +10,8 @@ from mmcv.cnn.bricks.drop import build_dropout
 from mmcv.cnn.bricks.transformer import MultiheadAttention
 from mmcv.runner import BaseModule, ModuleList, Sequential, _load_checkpoint
 
-
 from .transformer_helper import PatchEmbed, nchw_to_nlc, nlc_to_nchw, resize, \
-                                get_root_logger, BaseDecodeHead
+                                get_root_logger, BaseDecodeHead, HEADS, BACKBONES
 
 
 class MixFFN(BaseModule):
@@ -242,6 +241,7 @@ class TransformerEncoderLayer(BaseModule):
         return x
 
 
+@BACKBONES.register_module()
 class MixVisionTransformer(BaseModule):
     """The backbone of Segformer.
 
@@ -398,7 +398,11 @@ class MixVisionTransformer(BaseModule):
 
             self.load_state_dict(state_dict, False)
 
-    def forward(self, x):
+    def forward(self, x, additional_features=None):
+        
+        if additional_features:
+            print('Warning: additional features have no use.')
+
         outs = []
         for i, layer in enumerate(self.layers):
             x, H, W = layer[0](x), layer[0].DH, layer[0].DW
@@ -413,6 +417,7 @@ class MixVisionTransformer(BaseModule):
         return outs
 
 
+@HEADS.register_module()
 class SegformerHead(BaseDecodeHead):
     """The all mlp Head of segformer.
 

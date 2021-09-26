@@ -8,6 +8,7 @@ from mmcv.runner import BaseModule, auto_fp16, force_fp32
 from .builder import build_pixel_sampler, build_loss
 from .wrappers import resize
 from .accuracy import accuracy
+from .cross_entropy_loss import CrossEntropyLoss
 
 
 class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
@@ -48,16 +49,13 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
                  channels,
                  *,
                  num_classes,
+                 loss_decode,
                  dropout_ratio=0.1,
                  conv_cfg=None,
                  norm_cfg=None,
                  act_cfg=dict(type='ReLU'),
                  in_index=-1,
                  input_transform=None,
-                 loss_decode=dict(
-                     type='CrossEntropyLoss',
-                     use_sigmoid=False,
-                     loss_weight=1.0),
                  ignore_index=255,
                  sampler=None,
                  align_corners=False,
@@ -72,7 +70,8 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
         self.norm_cfg = norm_cfg
         self.act_cfg = act_cfg
         self.in_index = in_index
-        self.loss_decode = build_loss(loss_decode)
+        # self.loss_decode = build_loss(loss_decode)
+        self.loss_decode = loss_decode
         self.ignore_index = ignore_index
         self.align_corners = align_corners
         if sampler is not None:
