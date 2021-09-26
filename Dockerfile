@@ -10,7 +10,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         software-properties-common \
         python3.6-dev \
         python3-pip \
-        python3-tk
+        python3-tk \
+        firefox \
+        libcanberra-gtk-module \
+        nano
 
 WORKDIR /tmp
 
