@@ -81,22 +81,16 @@ def train(model, cfg, model_cfg):
                                        merge_objects_prob=0.15,
                                        max_num_merged_objects=2)
 
-    trainset = SBDDataset(
-        cfg.SBD_PATH,
+    trainset = PascalVocDataset(
+        cfg.PASCALVOC_PATH,
         split='train',
         augmentator=train_augmentator,
-        min_object_area=80,
-        keep_background_prob=0.01,
-        points_sampler=points_sampler,
-        samples_scores_path='./assets/sbd_samples_weights.pkl',
-        samples_scores_gamma=1.25
     )
 
-    valset = SBDDataset(
-        cfg.SBD_PATH,
+    valset = PascalVocDataset(
+        cfg.PASCALVOC_PATH,
         split='val',
         augmentator=val_augmentator,
-        min_object_area=80,
         points_sampler=points_sampler,
         epoch_len=500
     )
