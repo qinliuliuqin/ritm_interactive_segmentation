@@ -1,4 +1,6 @@
 from isegm.utils.exp_imports.default import *
+from isegm.model.modeling.transformer_helper.cross_entropy_loss import CrossEntropyLoss
+
 MODEL_NAME = 'sbd_segformerb5'
 
 
@@ -13,7 +15,7 @@ def init_model(cfg):
     model_cfg.num_max_points = 24
 
     backbone_params=dict(    
-        in_channels=3,
+        in_channels=64,
         embed_dims=64,
         num_stages=4,
         num_layers=[3, 6, 40, 3],
@@ -34,13 +36,19 @@ def init_model(cfg):
         in_index=[0, 1, 2, 3],
         channels=256,
         dropout_ratio=0.1,
-        num_classes=2,
+        num_classes=1,
         norm_cfg=norm_cfg,
+        loss_decode=CrossEntropyLoss(),
         align_corners=False,
     )
 
-    model = SegformerModel(backbone_params, decode_head_params, use_rgb_conv=True, \
-                            use_disks=True, norm_radius=5, with_prev_mask=True)
+    model = SegformerModel(
+        backbone_params=backbone_params, 
+        decode_head_params=decode_head_params, 
+        use_rgb_conv=False,
+        use_disks=True, 
+        norm_radius=5, 
+        with_prev_mask=True)
     model.to(cfg.device)
     # model.apply(initializer.XavierGluon(rnd_type='gaussian', magnitude=2.0))
     # model.feature_extractor.load_pretrained_weights(cfg.IMAGENET_PRETRAINED_MODELS.HRNETV2_W18)
@@ -56,8 +64,6 @@ def train(model, cfg, model_cfg):
     loss_cfg = edict()
     loss_cfg.instance_loss = NormalizedFocalLossSigmoid(alpha=0.5, gamma=2)
     loss_cfg.instance_loss_weight = 1.0
-    loss_cfg.instance_aux_loss = SigmoidBinaryCrossEntropyLoss()
-    loss_cfg.instance_aux_loss_weight = 0.4
 
     train_augmentator = Compose([
         UniformRandomResize(scale_range=(0.75, 1.25)),
@@ -92,7 +98,7 @@ def train(model, cfg, model_cfg):
         split='val',
         augmentator=val_augmentator,
         points_sampler=points_sampler,
-        epoch_len=500
+        epoch_len=100
     )
 
     optimizer_params = {

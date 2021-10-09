@@ -8,7 +8,14 @@ from .modeling.segformer import MixVisionTransformer, SegformerHead
 
 class SegformerModel(ISModel):
     @serialize
-    def __init__(self, backbone_params, decode_head_params, backbone_lr_mult=0.1, **kwargs):
+    def __init__(
+        self, 
+        backbone_params=None, 
+        decode_head_params=None,
+        backbone_lr_mult=0.1, 
+        **kwargs
+        ):
+
         super().__init__(**kwargs)
 
         self.feature_extractor = MixVisionTransformer(**backbone_params)
@@ -18,6 +25,5 @@ class SegformerModel(ISModel):
 
     def backbone_forward(self, image, coord_features=None):
         backbone_features = self.feature_extractor(image, coord_features)
-
-        return {'instances': self.head(backbone_features[0])}
+        return {'instances': self.head(backbone_features), 'instances_aux': None}
         

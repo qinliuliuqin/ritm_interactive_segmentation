@@ -285,13 +285,13 @@ class MixVisionTransformer(BaseModule):
     """
 
     def __init__(self,
-                 in_channels=3,
+                 in_channels=64,
                  embed_dims=64,
                  num_stages=4,
                  num_layers=[3, 4, 6, 3],
                  num_heads=[1, 2, 4, 8],
                  patch_sizes=[7, 3, 3, 3],
-                 strides=[4, 2, 2, 2],
+                 strides=[2, 2, 2, 2],
                  sr_ratios=[8, 4, 2, 1],
                  out_indices=(0, 1, 2, 3),
                  mlp_ratio=4,
@@ -332,6 +332,13 @@ class MixVisionTransformer(BaseModule):
         self.pretrain_style = pretrain_style
         self.pretrained = pretrained
         self.init_cfg = init_cfg
+
+        # cnn encoder
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.conv2 = nn.Conv2d(64, 64, kernel_size=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU()
 
         # transformer encoder
         dpr = [
@@ -398,10 +405,20 @@ class MixVisionTransformer(BaseModule):
 
             self.load_state_dict(state_dict, False)
 
+
+    def compute_pre_stage_features(self, x, additional_features):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        if additional_features is not None:
+            x = x + additional_features
+        x = self.conv2(x)
+        x = self.bn2(x)
+        return self.relu(x)
+
+
     def forward(self, x, additional_features=None):
-        
-        if additional_features:
-            print('Warning: additional features have no use.')
+        x = self.compute_pre_stage_features(x, additional_features)
 
         outs = []
         for i, layer in enumerate(self.layers):

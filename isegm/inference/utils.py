@@ -57,7 +57,7 @@ def get_dataset(dataset_name, cfg):
     elif dataset_name == 'SBD_Train':
         dataset = SBDEvaluationDataset(cfg.SBD_PATH, split='train')
     elif dataset_name == 'PascalVOC':
-        dataset = PascalVocDataset(cfg.PASCALVOC_PATH, split='test')
+        dataset = PascalVocDataset(cfg.PASCALVOC_PATH, split='val')
     elif dataset_name == 'COCO_MVal':
         dataset = DavisDataset(cfg.COCO_MVAL_PATH)
     else:
