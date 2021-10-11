@@ -1,7 +1,7 @@
 from isegm.utils.exp_imports.default import *
 from isegm.model.modeling.transformer_helper.cross_entropy_loss import CrossEntropyLoss
 
-MODEL_NAME = 'sbd_segformerb5'
+MODEL_NAME = 'pascal_segformerb5'
 
 
 def main(cfg):
