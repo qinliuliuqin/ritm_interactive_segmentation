@@ -1,7 +1,7 @@
 from isegm.utils.exp_imports.default import *
 from isegm.model.modeling.transformer_helper.cross_entropy_loss import CrossEntropyLoss
 
-MODEL_NAME = 'sbd_segformerb5'
+MODEL_NAME = 'pascal_segformerb5'
 
 
 def main(cfg):
@@ -15,13 +15,14 @@ def init_model(cfg):
     model_cfg.num_max_points = 24
 
     backbone_params=dict(    
-        in_channels=64,
+        in_channels=3,
+        additional_in_channels=3,
         embed_dims=64,
         num_stages=4,
         num_layers=[3, 6, 40, 3],
         num_heads=[1, 2, 5, 8],
         patch_sizes=[7, 3, 3, 3],
-        strides=[2, 2, 2, 2],
+        strides=[4, 2, 2, 2],
         sr_ratios=[8, 4, 2, 1],
         out_indices=(0, 1, 2, 3),
         mlp_ratio=4,
@@ -31,14 +32,13 @@ def init_model(cfg):
         drop_path_rate=0.1
     )
 
-    norm_cfg = dict(type='BN', requires_grad=True)
+    # norm_cfg = dict(type='BN', requires_grad=True)
     decode_head_params=dict(
         in_channels=[64, 128, 320, 512],
         in_index=[0, 1, 2, 3],
         channels=256,
         dropout_ratio=0.1,
         num_classes=1,
-        norm_cfg=norm_cfg,
         loss_decode=CrossEntropyLoss(),
         align_corners=False,
     )
