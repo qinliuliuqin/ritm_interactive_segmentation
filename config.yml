@@ -1,5 +1,6 @@
-INTERACTIVE_MODELS_PATH: "./weights"
-EXPS_PATH: "/playpen-raid/qinliu/models/model_0926_2021"
+# INTERACTIVE_MODELS_PATH: "./weights"
+INTERACTIVE_MODELS_PATH: "/playpen-raid/qinliu/models/model_1012_2021/iter_mask/pascal_segformerb5/000/checkpoints"
+EXPS_PATH: "/playpen-raid/qinliu/models/model_1012_2021"
 
 # Evaluation datasets
 GRABCUT_PATH: "/playpen-raid/qinliu/data/GrabCut"
