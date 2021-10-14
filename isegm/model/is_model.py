@@ -66,8 +66,9 @@ class ISModel(nn.Module):
             x = self.rgb_conv(torch.cat((image, coord_features), dim=1))
             outputs = self.backbone_forward(x)
         else:
-            coord_features = self.maps_transform(coord_features)
-            outputs = self.backbone_forward(image, coord_features)
+            # coord_features = self.maps_transform(coord_features)
+            x = torch.cat((image, coord_features), dim=1)
+            outputs = self.backbone_forward(x)
 
         outputs['instances'] = nn.functional.interpolate(outputs['instances'], size=image.size()[2:],
                                                          mode='bilinear', align_corners=True)

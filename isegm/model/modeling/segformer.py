@@ -333,13 +333,6 @@ class MixVisionTransformer(BaseModule):
         self.pretrained = pretrained
         self.init_cfg = init_cfg
 
-        # cnn encoder
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.conv2 = nn.Conv2d(64, 64, kernel_size=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(64)
-        self.relu = nn.ReLU()
-
         # transformer encoder
         dpr = [
             x.item()
@@ -406,19 +399,7 @@ class MixVisionTransformer(BaseModule):
             self.load_state_dict(state_dict, False)
 
 
-    def compute_pre_stage_features(self, x, additional_features):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        if additional_features is not None:
-            x = x + additional_features
-        x = self.conv2(x)
-        x = self.bn2(x)
-        return self.relu(x)
-
-
     def forward(self, x, additional_features=None):
-        x = self.compute_pre_stage_features(x, additional_features)
 
         outs = []
         for i, layer in enumerate(self.layers):
