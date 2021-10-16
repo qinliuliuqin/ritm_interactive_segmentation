@@ -1,3 +1,5 @@
+This repository aims to apply Transformers for interactive segmentation. We use RITM as our codebase.
+
 ## Reviving Iterative Training with Mask Guidance for Interactive Segmentation 
 
 <p align="center">
