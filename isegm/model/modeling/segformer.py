@@ -396,7 +396,12 @@ class MixVisionTransformer(BaseModule):
             else:
                 state_dict = checkpoint
 
-            self.load_state_dict(state_dict, False)
+
+            # only use this code if we adopt v3
+            ori_proj_weight = state_dict['layers.0.0.projection.weight']
+            state_dict['layers.0.0.projection.weight'] = torch.cat([ori_proj_weight, ori_proj_weight], dim=1)
+
+            self.load_state_dict(state_dict, True)
 
 
     def forward(self, x, additional_features=None):

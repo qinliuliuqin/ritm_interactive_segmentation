@@ -1,7 +1,7 @@
 from isegm.utils.exp_imports.default import *
 from isegm.model.modeling.transformer_helper.cross_entropy_loss import CrossEntropyLoss
 
-MODEL_NAME = 'pascal_segformerb5'
+MODEL_NAME = 'pascal_segformerb2'
 
 
 def main(cfg):
@@ -18,7 +18,7 @@ def init_model(cfg):
         in_channels=6,
         embed_dims=64,
         num_stages=4,
-        num_layers=[3, 6, 40, 3],
+        num_layers=[3, 4, 6, 3],
         num_heads=[1, 2, 5, 8],
         patch_sizes=[7, 3, 3, 3],
         strides=[4, 2, 2, 2],
@@ -29,7 +29,7 @@ def init_model(cfg):
         drop_rate=0.0,
         attn_drop_rate=0.0,
         drop_path_rate=0.1,
-        pretrained=cfg.IMAGENET_PRETRAINED_MODELS.MIT_B5
+        pretrained=cfg.IMAGENET_PRETRAINED_MODELS.MIT_B2
     )
 
     # norm_cfg = dict(type='BN', requires_grad=True)

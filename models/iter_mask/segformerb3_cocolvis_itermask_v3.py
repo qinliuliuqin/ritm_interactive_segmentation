@@ -1,7 +1,7 @@
 from isegm.utils.exp_imports.default import *
 from isegm.model.modeling.transformer_helper.cross_entropy_loss import CrossEntropyLoss
 
-MODEL_NAME = 'pascal_segformerb5'
+MODEL_NAME = 'cocolvis_segformerb3'
 
 
 def main(cfg):
@@ -18,7 +18,7 @@ def init_model(cfg):
         in_channels=6,
         embed_dims=64,
         num_stages=4,
-        num_layers=[3, 6, 40, 3],
+        num_layers=[3, 4, 18, 3],
         num_heads=[1, 2, 5, 8],
         patch_sizes=[7, 3, 3, 3],
         strides=[4, 2, 2, 2],
@@ -29,7 +29,7 @@ def init_model(cfg):
         drop_rate=0.0,
         attn_drop_rate=0.0,
         drop_path_rate=0.1,
-        pretrained=cfg.IMAGENET_PRETRAINED_MODELS.MIT_B5
+        pretrained=cfg.IMAGENET_PRETRAINED_MODELS.MIT_B3
     )
 
     # norm_cfg = dict(type='BN', requires_grad=True)
@@ -51,15 +51,13 @@ def init_model(cfg):
         norm_radius=5, 
         with_prev_mask=True)
     model.to(cfg.device)
-    # model.apply(initializer.XavierGluon(rnd_type='gaussian', magnitude=2.0))
     model.feature_extractor.init_weights()
-    # model.feature_extractor.load_pretrained_weights(cfg.IMAGENET_PRETRAINED_MODELS.HRNETV2_W18)
 
     return model, model_cfg
 
 
 def train(model, cfg, model_cfg):
-    cfg.batch_size = 28 if cfg.batch_size < 1 else cfg.batch_size
+    cfg.batch_size = 32 if cfg.batch_size < 1 else cfg.batch_size
     cfg.val_batch_size = cfg.batch_size
     crop_size = model_cfg.crop_size
 
@@ -68,11 +66,8 @@ def train(model, cfg, model_cfg):
     loss_cfg.instance_loss_weight = 1.0
 
     train_augmentator = Compose([
-        UniformRandomResize(scale_range=(0.75, 1.25)),
-        Flip(),
-        RandomRotate90(),
-        ShiftScaleRotate(shift_limit=0.03, scale_limit=0,
-                         rotate_limit=(-3, 3), border_mode=0, p=0.75),
+        UniformRandomResize(scale_range=(0.75, 1.40)),
+        HorizontalFlip(),
         PadIfNeeded(min_height=crop_size[0], min_width=crop_size[1], border_mode=0),
         RandomCrop(*crop_size),
         RandomBrightnessContrast(brightness_limit=(-0.25, 0.25), contrast_limit=(-0.15, 0.4), p=0.75),
@@ -80,7 +75,6 @@ def train(model, cfg, model_cfg):
     ], p=1.0)
 
     val_augmentator = Compose([
-        UniformRandomResize(scale_range=(0.75, 1.25)),
         PadIfNeeded(min_height=crop_size[0], min_width=crop_size[1], border_mode=0),
         RandomCrop(*crop_size)
     ], p=1.0)
@@ -89,18 +83,24 @@ def train(model, cfg, model_cfg):
                                        merge_objects_prob=0.15,
                                        max_num_merged_objects=2)
 
-    trainset = PascalVocDataset(
-        cfg.PASCALVOC_PATH,
+    trainset = CocoLvisDataset(
+        cfg.LVIS_v1_PATH,
         split='train',
         augmentator=train_augmentator,
+        min_object_area=1000,
+        keep_background_prob=0.05,
+        points_sampler=points_sampler,
+        epoch_len=30000,
+        stuff_prob=0.30
     )
 
-    valset = PascalVocDataset(
-        cfg.PASCALVOC_PATH,
+    valset = CocoLvisDataset(
+        cfg.LVIS_v1_PATH,
         split='val',
         augmentator=val_augmentator,
+        min_object_area=1000,
         points_sampler=points_sampler,
-        epoch_len=100
+        epoch_len=2000
     )
 
     optimizer_params = {
@@ -108,15 +108,15 @@ def train(model, cfg, model_cfg):
     }
 
     lr_scheduler = partial(torch.optim.lr_scheduler.MultiStepLR,
-                           milestones=[200, 215], gamma=0.1)
+                           milestones=[49, 55], gamma=0.1)
     trainer = ISTrainer(model, cfg, model_cfg, loss_cfg,
                         trainset, valset,
                         optimizer='adam',
                         optimizer_params=optimizer_params,
                         lr_scheduler=lr_scheduler,
-                        checkpoint_interval=50,
+                        checkpoint_interval=[(0, 5), (50, 1)],
                         image_dump_interval=3000,
                         metrics=[AdaptiveIoU()],
                         max_interactive_points=model_cfg.num_max_points,
                         max_num_next_clicks=3)
-    trainer.run(num_epochs=220)
+    trainer.run(num_epochs=55, validation=False)

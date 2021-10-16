@@ -20,7 +20,6 @@ class SegformerModel(ISModel):
 
         self.feature_extractor = MixVisionTransformer(**backbone_params)
         self.feature_extractor.apply(LRMult(backbone_lr_mult))
-        self.feature_extractor.init_weights()
 
         self.head = SegformerHead(**decode_head_params)
 
