@@ -4,7 +4,8 @@ from pathlib import Path
 import torch
 import numpy as np
 
-from isegm.data.datasets import GrabCutDataset, BerkeleyDataset, DavisDataset, SBDEvaluationDataset, PascalVocDataset
+from isegm.data.datasets import GrabCutDataset, BerkeleyDataset, DavisDataset, \
+    SBDEvaluationDataset, PascalVocDataset, BraTSDataset
 from isegm.utils.serialization import load_model
 
 
@@ -60,6 +61,8 @@ def get_dataset(dataset_name, cfg):
         dataset = PascalVocDataset(cfg.PASCALVOC_PATH, split='val')
     elif dataset_name == 'COCO_MVal':
         dataset = DavisDataset(cfg.COCO_MVAL_PATH)
+    elif dataset_name == 'BraTS':
+        dataset = BraTSDataset(cfg.BraTS_PATH)
     else:
         dataset = None
 

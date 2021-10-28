@@ -31,7 +31,7 @@ def parse_args():
                                    help='The relative path to the experiment with checkpoints.'
                                         '(relative to cfg.EXPS_PATH)')
 
-    parser.add_argument('--datasets', type=str, default='GrabCut,Berkeley,DAVIS,SBD,PascalVOC',
+    parser.add_argument('--datasets', type=str, default='GrabCut,Berkeley,DAVIS,SBD,PascalVOC,BraTS',
                         help='List of datasets on which the model should be tested. '
                              'Datasets are separated by a comma. Possible choices: '
                              'GrabCut, Berkeley, DAVIS, SBD, PascalVOC')
@@ -132,7 +132,7 @@ def main():
             print_header = False
 
 
-def get_predictor_and_zoomin_params(args, dataset_name):
+def get_predictor_and_zoomin_params(args, dataset_name, apply_zoom_in=True):
     predictor_params = {}
 
     if args.clicks_limit is not None:
@@ -140,18 +140,20 @@ def get_predictor_and_zoomin_params(args, dataset_name):
             args.clicks_limit = args.n_clicks
         predictor_params['net_clicks_limit'] = args.clicks_limit
 
-    if args.eval_mode == 'cvpr':
-        zoom_in_params = {
-            'target_size': 600 if dataset_name == 'DAVIS' else 400
-        }
-    elif args.eval_mode.startswith('fixed'):
-        crop_size = int(args.eval_mode[5:])
-        zoom_in_params = {
-            'skip_clicks': -1,
-            'target_size': (crop_size, crop_size)
-        }
-    else:
-        raise NotImplementedError
+    zoom_in_params = None
+    if apply_zoom_in:
+        if args.eval_mode == 'cvpr':
+            zoom_in_params = {
+                'target_size': 600 if dataset_name == 'DAVIS' else 400
+            }
+        elif args.eval_mode.startswith('fixed'):
+            crop_size = int(args.eval_mode[5:])
+            zoom_in_params = {
+                'skip_clicks': -1,
+                'target_size': (crop_size, crop_size)
+            }
+        else:
+            raise NotImplementedError
 
     return predictor_params, zoom_in_params
 
