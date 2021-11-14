@@ -1,11 +1,10 @@
 from datetime import timedelta
 from pathlib import Path
-
 import torch
 import numpy as np
 
 from isegm.data.datasets import GrabCutDataset, BerkeleyDataset, DavisDataset, \
-    SBDEvaluationDataset, PascalVocDataset, BraTSDataset
+    SBDEvaluationDataset, PascalVocDataset, BraTSDataset, ssTEMDataset
 from isegm.utils.serialization import load_model
 
 
@@ -63,6 +62,8 @@ def get_dataset(dataset_name, cfg):
         dataset = DavisDataset(cfg.COCO_MVAL_PATH)
     elif dataset_name == 'BraTS':
         dataset = BraTSDataset(cfg.BraTS_PATH)
+    elif dataset_name == 'ssTEM':
+        dataset = ssTEMDataset(cfg.ssTEM_PATH)
     else:
         dataset = None
 
