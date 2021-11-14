@@ -1,5 +1,5 @@
 from isegm.utils.exp_imports.default import *
-MODEL_NAME = 'cocolvis_hrnet18'
+MODEL_NAME = 'pascal_hrnet32'
 
 
 def main(cfg):
@@ -12,13 +12,12 @@ def init_model(cfg):
     model_cfg.crop_size = (320, 480)
     model_cfg.num_max_points = 24
 
-    model = HRNetModel(width=18, ocr_width=64, with_aux_output=True, use_leaky_relu=True,
-                       use_rgb_conv=False, use_disks=True, norm_radius=5,
-                       with_prev_mask=True)
+    model = HRNetModel(width=32, ocr_width=128, with_aux_output=True, use_leaky_relu=True,
+                       use_rgb_conv=False, use_disks=True, norm_radius=5, with_prev_mask=True)
 
     model.to(cfg.device)
     model.apply(initializer.XavierGluon(rnd_type='gaussian', magnitude=2.0))
-    model.feature_extractor.load_pretrained_weights(cfg.IMAGENET_PRETRAINED_MODELS.HRNETV2_W18)
+    model.feature_extractor.load_pretrained_weights(cfg.IMAGENET_PRETRAINED_MODELS.HRNETV2_W32)
 
     return model, model_cfg
 
@@ -35,8 +34,11 @@ def train(model, cfg, model_cfg):
     loss_cfg.instance_aux_loss_weight = 0.4
 
     train_augmentator = Compose([
-        UniformRandomResize(scale_range=(0.75, 1.40)),
-        HorizontalFlip(),
+        UniformRandomResize(scale_range=(0.75, 1.25)),
+        Flip(),
+        RandomRotate90(),
+        ShiftScaleRotate(shift_limit=0.03, scale_limit=0,
+                         rotate_limit=(-3, 3), border_mode=0, p=0.75),
         PadIfNeeded(min_height=crop_size[0], min_width=crop_size[1], border_mode=0),
         RandomCrop(*crop_size),
         RandomBrightnessContrast(brightness_limit=(-0.25, 0.25), contrast_limit=(-0.15, 0.4), p=0.75),
@@ -44,6 +46,7 @@ def train(model, cfg, model_cfg):
     ], p=1.0)
 
     val_augmentator = Compose([
+        UniformRandomResize(scale_range=(0.75, 1.25)),
         PadIfNeeded(min_height=crop_size[0], min_width=crop_size[1], border_mode=0),
         RandomCrop(*crop_size)
     ], p=1.0)
@@ -52,24 +55,18 @@ def train(model, cfg, model_cfg):
                                        merge_objects_prob=0.15,
                                        max_num_merged_objects=2)
 
-    trainset = CocoLvisDataset(
-        cfg.LVIS_v1_PATH,
+    trainset = PascalVocDataset(
+        cfg.PASCALVOC_PATH,
         split='train',
         augmentator=train_augmentator,
-        min_object_area=1000,
-        keep_background_prob=0.05,
-        points_sampler=points_sampler,
-        epoch_len=30000,
-        stuff_prob=0.30
     )
 
-    valset = CocoLvisDataset(
-        cfg.LVIS_v1_PATH,
+    valset = PascalVocDataset(
+        cfg.PASCALVOC_PATH,
         split='val',
         augmentator=val_augmentator,
-        min_object_area=1000,
         points_sampler=points_sampler,
-        epoch_len=2000
+        epoch_len=500
     )
 
     optimizer_params = {
@@ -77,15 +74,15 @@ def train(model, cfg, model_cfg):
     }
 
     lr_scheduler = partial(torch.optim.lr_scheduler.MultiStepLR,
-                           milestones=[50, 90], gamma=0.1)
+                           milestones=[100, 150], gamma=0.1)
     trainer = ISTrainer(model, cfg, model_cfg, loss_cfg,
                         trainset, valset,
                         optimizer='adam',
                         optimizer_params=optimizer_params,
                         lr_scheduler=lr_scheduler,
-                        checkpoint_interval=[(0, 5), (90, 1)],
+                        checkpoint_interval=[(0, 5), (100, 1)],
                         image_dump_interval=3000,
                         metrics=[AdaptiveIoU()],
                         max_interactive_points=model_cfg.num_max_points,
                         max_num_next_clicks=3)
-    trainer.run(num_epochs=100, validation=False)
+    trainer.run(num_epochs=155, validation=False)

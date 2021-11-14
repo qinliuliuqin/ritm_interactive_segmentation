@@ -1,5 +1,5 @@
 from isegm.utils.exp_imports.default import *
-MODEL_NAME = 'cocolvis_hrnet18'
+MODEL_NAME = 'sbd_hrnet32'
 
 
 def main(cfg):
@@ -12,13 +12,12 @@ def init_model(cfg):
     model_cfg.crop_size = (320, 480)
     model_cfg.num_max_points = 24
 
-    model = HRNetModel(width=18, ocr_width=64, with_aux_output=True, use_leaky_relu=True,
-                       use_rgb_conv=False, use_disks=True, norm_radius=5,
-                       with_prev_mask=True)
+    model = HRNetModel(width=32, ocr_width=128, with_aux_output=True, use_leaky_relu=True,
+                       use_rgb_conv=False, use_disks=True, norm_radius=5, with_prev_mask=True)
 
     model.to(cfg.device)
     model.apply(initializer.XavierGluon(rnd_type='gaussian', magnitude=2.0))
-    model.feature_extractor.load_pretrained_weights(cfg.IMAGENET_PRETRAINED_MODELS.HRNETV2_W18)
+    model.feature_extractor.load_pretrained_weights(cfg.IMAGENET_PRETRAINED_MODELS.HRNETV2_W32)
 
     return model, model_cfg
 
@@ -35,8 +34,11 @@ def train(model, cfg, model_cfg):
     loss_cfg.instance_aux_loss_weight = 0.4
 
     train_augmentator = Compose([
-        UniformRandomResize(scale_range=(0.75, 1.40)),
-        HorizontalFlip(),
+        UniformRandomResize(scale_range=(0.75, 1.25)),
+        Flip(),
+        RandomRotate90(),
+        ShiftScaleRotate(shift_limit=0.03, scale_limit=0,
+                         rotate_limit=(-3, 3), border_mode=0, p=0.75),
         PadIfNeeded(min_height=crop_size[0], min_width=crop_size[1], border_mode=0),
         RandomCrop(*crop_size),
         RandomBrightnessContrast(brightness_limit=(-0.25, 0.25), contrast_limit=(-0.15, 0.4), p=0.75),
@@ -44,6 +46,7 @@ def train(model, cfg, model_cfg):
     ], p=1.0)
 
     val_augmentator = Compose([
+        UniformRandomResize(scale_range=(0.75, 1.25)),
         PadIfNeeded(min_height=crop_size[0], min_width=crop_size[1], border_mode=0),
         RandomCrop(*crop_size)
     ], p=1.0)
@@ -52,24 +55,24 @@ def train(model, cfg, model_cfg):
                                        merge_objects_prob=0.15,
                                        max_num_merged_objects=2)
 
-    trainset = CocoLvisDataset(
-        cfg.LVIS_v1_PATH,
+    trainset = SBDDataset(
+        cfg.SBD_PATH,
         split='train',
         augmentator=train_augmentator,
-        min_object_area=1000,
-        keep_background_prob=0.05,
+        min_object_area=80,
+        keep_background_prob=0.01,
         points_sampler=points_sampler,
-        epoch_len=30000,
-        stuff_prob=0.30
+        samples_scores_path='./assets/sbd_samples_weights.pkl',
+        samples_scores_gamma=1.25
     )
 
-    valset = CocoLvisDataset(
-        cfg.LVIS_v1_PATH,
+    valset = SBDDataset(
+        cfg.SBD_PATH,
         split='val',
         augmentator=val_augmentator,
-        min_object_area=1000,
+        min_object_area=80,
         points_sampler=points_sampler,
-        epoch_len=2000
+        epoch_len=500
     )
 
     optimizer_params = {
@@ -83,7 +86,7 @@ def train(model, cfg, model_cfg):
                         optimizer='adam',
                         optimizer_params=optimizer_params,
                         lr_scheduler=lr_scheduler,
-                        checkpoint_interval=[(0, 5), (90, 1)],
+                        checkpoint_interval=[(0, 5), (100, 1)],
                         image_dump_interval=3000,
                         metrics=[AdaptiveIoU()],
                         max_interactive_points=model_cfg.num_max_points,

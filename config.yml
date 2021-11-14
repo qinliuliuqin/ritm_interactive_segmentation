@@ -2,7 +2,7 @@
 # INTERACTIVE_MODELS_PATH: "/playpen-raid/qinliu/models/model_1012_2021/iter_mask/pascal_hrnet18/001/checkpoints"
 # INTERACTIVE_MODELS_PATH: "/playpen-raid/qinliu/models/model_1015_2021/iter_mask/pascal_segformerb5/005_pretrain_b2/checkpoints"
 INTERACTIVE_MODELS_PATH: "/playpen-raid/qinliu/models/model_1016_2021/iter_mask/cocolvis_segformerb2/000_cocolvis/checkpoints"
-EXPS_PATH: "/playpen-raid/qinliu/models/model_1025_2021"
+EXPS_PATH: "/playpen-raid/qinliu/models/model_1113_2021"
 
 # Evaluation datasets
 GRABCUT_PATH: "/playpen-raid/qinliu/data/GrabCut"
@@ -18,6 +18,7 @@ OPENIMAGES_PATH: "./datasets/OpenImages"
 PASCALVOC_PATH: "/playpen-raid/qinliu/data/PascalVOC"
 ADE20K_PATH: "./datasets/ADE20K"
 BraTS_PATH: "/playpen-raid/qinliu/data/BraTS20"
+ssTEM_PATH: "/playpen-raid/qinliu/data/ssTEM"
 
 # You can download the weights for HRNet from the repository:
 # https://github.com/HRNet/HRNet-Image-Classification
