@@ -1,9 +1,30 @@
-# Train SBD HRNet18
-python train.py models/iter_mask/hrnet18_sbd_itermask_3p.py \
+# # Train PASCAL HRNet32
+# python train.py models/iter_mask/hrnet32_pascal_itermask_3p.py \
+# --batch-size=32 \
+# --gpus=3 \
+# --exp-name hrnet32_pascal
+
+
+# # Train SBD HRNet18
+# python train.py models/iter_mask/hrnet18_sbd_itermask_3p.py \
+# --batch-size=32 \
+# --gpus=1 \
+# --exp-name hrnet18_sota_finetune \
+# --weights ./weights/sbd_h18_itermask.pth
+
+
+# Train SBD HRNet32
+python train.py models/iter_mask/hrnet32_sbd_itermask_3p.py \
 --batch-size=32 \
---gpus=1 \
---exp-name hrnet18_sota_finetune \
---weights ./weights/sbd_h18_itermask.pth
+--gpus=3 \
+--exp-name hrnet32_sbd
+
+
+# # Train COCO_LVIS HRNet18
+# python train.py models/iter_mask/hrnet18_cocolvis_itermask_3p.py \
+# --batch-size=32 \
+# --gpus=2 \
+# --weights ./weights/sbd_h18_itermask_sota.pth
 
 
 # # Train COCO_LVIS HRNet32

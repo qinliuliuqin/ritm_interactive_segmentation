@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import argparse
 import tkinter as tk
 
@@ -6,7 +9,6 @@ import torch
 from isegm.utils import exp
 from isegm.inference import utils
 from interactive_demo.app import InteractiveDemoApp
-
 
 def main():
     args, cfg = parse_args()
